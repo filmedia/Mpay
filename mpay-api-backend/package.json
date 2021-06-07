@@ -1,0 +1,28 @@
+{
+  "name": "motivato_api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "benson smith",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-ip": "^1.0.4",
+    "express-ws": "^4.0.0",
+    "generate-unique-id": "^2.0.1",
+    "ip": "^1.1.5",
+    "iplocation": "^7.2.0",
+    "lodash": "^4.17.21",
+    "mysql": "^2.18.1",
+    "mysql2": "^2.2.5",
+    "node-fetch": "^2.6.1",
+    "node-querybuilder": "^2.1.1",
+    "sequelize": "^6.6.2"
+  }
+}
