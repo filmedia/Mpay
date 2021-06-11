@@ -7,6 +7,7 @@ import {styles,themes} from './styles'
 import {post} from '../../../core/helpers/apiAction'
 import ValidationComponent from 'react-native-form-validator';
 import SelectDropdown from 'react-native-select-dropdown'
+import { showMessage, hideMessage } from "react-native-flash-message";
 
 class Form extends ValidationComponent {
 
@@ -21,7 +22,8 @@ class Form extends ValidationComponent {
       email:'',
       address:'',
       staff_type:'',
-      disableButton:true
+      disableButton:true,
+      loadingButton:false
     }
   }
  
@@ -41,27 +43,41 @@ class Form extends ValidationComponent {
     :alert('error')
   }
   
-  
-  onCreateUser=()=>{
-    const {studentId,firstname,lastname,sexe,phoneNumber,email,staff_type}=this.state
-   AsyncStorage.getItem('account').then(value=>{
-     const account=JSON.parse(value)
-     var data={
-       studentId,firstname,lastname,sexe,phoneNumber,email,status:staff_type,
-       accountId:account.id
-     }
-      post("staff",data)
-     .then(response=>{
-       AsyncStorage.setItem("auth","true")
-     })
-     .catch(error=>alert(error))
-   })
- }
 
 
+onCreateUser=()=>{
+  const {firstname,lastname,sexe,phoneNumber,email,staff_type}=this.state
+  this.setState({loadingButton:true})
+ 
+ var data={
+  firstname,lastname,sexe,telephone:phoneNumber,email,status:staff_type
+}
+ AsyncStorage.getItem('account').then(result=>{
+  const user=JSON.parse(result)
+  post("staff",{...data,accountId:user.id})
+  .finally(()=>{
+    this.setState({loadingButton:false})
+    firebase.default.auth().signInAnonymously().then(()=>{
+      showMessage({
+        message: `Felicitation ${firstname}!`,
+        description:"Vous venez de creer un compte MPAY-INUKA",
+        type: "info",
+        backgroundColor: "#234A85"
+      });
+    })
+  })
+})
+}
+
+componentDidMount(){
+  AsyncStorage.getItem("account").then(result=>{
+  const account=JSON.parse(result)
+   this.setState({phoneNumber:account.telephone})
+  })
+}
 
 render(){
-  const {studentId,firstname,lastname,sexe,phoneNumber,address,email,option,level,vacation}=this.state
+  const {firstname,lastname,sexe,phoneNumber,address,email,staff_type}=this.state
   return (<ScrollView>
      <View style={[styles.mainContainer]}>
     
@@ -157,7 +173,7 @@ render(){
         }
           data={['Personnel Administratif','Personnel Academique','Stagiaire','Autre']}
           onSelect={(selectedItem, index) => {
-            console.log(selectedItem, index)
+            this.setState({staff_type:selectedItem})
           }}
        />
  
@@ -167,7 +183,7 @@ render(){
        </HelperText>
        
      
-       <Button  onPress={()=>this.onValidate()}
+       <Button loading={this.props.loadingButton}  onPress={()=>this.onValidate()}
        style={{backgroundColor:'#234A85',padding:5,borderWidth:2}} labelStyle={{color:'#fff'}}>Terminer</Button>
        </View>
        

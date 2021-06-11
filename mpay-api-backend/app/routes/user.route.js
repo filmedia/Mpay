@@ -13,6 +13,7 @@ module.exports = function(app) {
     app.put('/api/login/account/:id', account.login);
     app.put('/api/logout/account/:id', account.logout);
     app.get('/api/find/account/:tel', account.findByPhone);
+
     //app.get('/api/search/account/:query', account.searchaccount);
     
     app.delete('/api/account/:id', account.delete);
@@ -22,14 +23,17 @@ module.exports = function(app) {
     app.delete('/api/student/:id', student.delete);
     app.get('/api/student', student.findAll);
     
-    app.get('/api/student/:id', student.show);
+   // app.get('/api/student/:id', student.show);
+    app.get('/api/student/:userId', student.findByUserKey);
 
     app.post('/api/staff', staff.create);
     app.put('/api/staff/:id', staff.update);
     app.delete('/api/staff/:id', staff.delete);
     app.get('/api/staff', staff.findAll);
-    
-    app.get('/api/staff/:id', staff.show);
+    app.get('/api/staff/:userId', staff.findByUserKey);
+    //app.get('/api/staff/:id', staff.show);
+
+    app.get('/api/login/:login', account.testLogin);
 
     
   

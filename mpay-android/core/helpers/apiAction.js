@@ -1,7 +1,7 @@
 
 
 export const post=(path,data)=>{
-  const fetchUrl=`https://14cf98b25f12.ngrok.io/api/${path}`;
+  const fetchUrl=`https://38595b706555.ngrok.io/api/${path}`;
  
   
   return  fetch(fetchUrl,{
@@ -18,7 +18,7 @@ export const post=(path,data)=>{
 }
 
 export const get=(path)=>{
-  const fetchUrl=`https://14cf98b25f12.ngrok.io/api/${path}`;
+  const fetchUrl=`https://38595b706555.ngrok.io/api/${path}`;
   return  fetch(fetchUrl,{
         cors:'no-cors',
         method:"GET",
@@ -33,7 +33,7 @@ export const get=(path)=>{
 
 
 export const update=(path,data)=>{
-  const fetchUrl=`https://14cf98b25f12.ngrok.io/api/${path}`;
+  const fetchUrl=`https://38595b706555.ngrok.io/api/${path}`;
     return  fetch(fetchUrl,{
           cors:'no-cors',
           method:"PUT",
@@ -47,7 +47,7 @@ export const update=(path,data)=>{
   }
 
   export const remove=(path)=>{
-    const fetchUrl=`https://14cf98b25f12.ngrok.io/api/${path}`;
+    const fetchUrl=`https://38595b706555.ngrok.io/api/${path}`;
     return  fetch(fetchUrl,{
           cors:'no-cors',
           method:"DELETE",

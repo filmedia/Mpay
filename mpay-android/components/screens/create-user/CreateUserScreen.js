@@ -7,7 +7,7 @@ import StaffForm from './StaffForm'
 
 const Tab = createMaterialTopTabNavigator();
 
-export default function MyTabs() {
+export default function MyTabs(props) {
     
   return (
     <Tab.Navigator
@@ -22,7 +22,7 @@ export default function MyTabs() {
     >
       <Tab.Screen
         name="Student"
-        component={()=>{return <StudentForm/>}}
+        component={()=>{return <StudentForm {...props}/>}}
         options={{
             tabBarLabel: 'Etudiant',
             tabBarIcon: ({ color }) => {
@@ -32,7 +32,7 @@ export default function MyTabs() {
       />
       <Tab.Screen
         name="Others"
-        component={()=>{return <StaffForm/>}}
+        component={()=>{return <StaffForm {...props}/>}}
         options={{ tabBarLabel: 'Personel',
         tabBarIcon: ({ color }) => {
             return <FontAwesome5 name="user-tie" color={color} size={26} />

@@ -6,15 +6,34 @@ var bcrypt = require("bcrypt");
 const { Op } = require("sequelize");
 
 exports.createUser = async(req, res) => {	
-	
-	await Account.create({  
-	  ...req.body,"password":bcrypt.hashSync(req.body.password,8),
-	 }).then(user => {
-		res.send(user);
-	});
+	try {
+		
+		await Account.create({  
+		  ...req.body,"password":req.body.password,
+		 }).then(user => {
+			res.send(user);
+		}).catch(e=>res.send('bobo'));
+	} catch (error) {
+		res.send(error)
+		console.error(error);
+	}
 };
 
-
+exports.testLogin=(req,res)=>{
+	
+	
+	const login=JSON.parse(req.params.login)
+	 Account.findAll(
+	{ 
+		where: {
+			[Op.and]: [{ telephone: login.telephone }, { password: login.password }],  
+		}
+	 }
+	)
+	.then((user) => {
+	  res.send(user);
+	});
+}
 exports.findAll=(req,res)=>{
   
   return  Account.findAll()

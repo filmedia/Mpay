@@ -61,9 +61,9 @@ function Profile(props) {
             .then((snapshot)=>{
                 setVisibleSnack(true)
                
-                // update(`student/${props.user.id}`,{photoUrl:snapshot}).finally(()=>{
-                //     props.fetchCurrentUser()
-                // })
+                update(`student/${props.user.id}`,{photoUrl:snapshot}).finally(()=>{
+                    props.fetchCurrentUser()
+                })
                 //this.props.updateProfile({photoUrl:snapshot})
                
                     //Toast.toastify.show(<TransText dictionary={translate.yourProfileHasBeenUpdated}/>, 2000)
@@ -77,10 +77,10 @@ function Profile(props) {
     }
 
 
-      React.useCallback(()=>{
-        props.fetchCurrentAccount()
-        props.fetchCurrentUser()
-    })
+    //   React.useCallback(()=>{
+    //     props.fetchCurrentAccount()
+    //     props.fetchCurrentUser()
+    // })
 
     React.useLayoutEffect(()=>{
         props.navigation.setOptions({
@@ -88,10 +88,10 @@ function Profile(props) {
           })
     })
 
-    const {id,user_type,accountKey}=props.account!==undefined ?props.account :[]
-    const {firstname,lastname,email,telephone,status,vacation,photoUrl,option,level,sexe}
+    const {id,user_type,accountKey}=props.currentUser!==undefined ?props.currentUser :[]
+    const {studentId,accountId,firstname,lastname,email,telephone,status,vacation,photoUrl,option,level,sexe}
     =props.user!==undefined ?props.user :[]
-
+    console.log(props.user);
     return (
         <View style={{flex:1}}>
            <View style={{alignItems:'center',padding:4}}>
@@ -111,7 +111,7 @@ function Profile(props) {
                 <Paragraph style={{textTransform:'capitalize'}}>{`${firstname} ${lastname}`}</Paragraph>
                 {
                         user_type=='student'
-                        ?<Caption>Etudiant</Caption>
+                        ?<Caption>{`Etudiant (${studentId})`}</Caption>
                         :<Caption>{status}</Caption>
                     }
                 
@@ -141,6 +141,7 @@ function Profile(props) {
                 <Paragraph>{telephone}</Paragraph>
                 </Col>
            </Row>
+           
            {
             user_type=='student'
            ?<Row size={2}>
@@ -148,9 +149,9 @@ function Profile(props) {
                 <Paragraph><MaterialCommunityIcons color="#234A85" name="information" size={20}/></Paragraph>
                 </Col>
                 <Col size={75}>
-                <Paragraph>3eme annee {`${option}`}</Paragraph>
+                <Paragraph>{level} {`${option}`}</Paragraph>
                         <Caption>
-                            {vacation=="mat"?"Matin" :vacation=="med"?"Median":"Soir"}
+                            {vacation}
                         </Caption>
                 </Col>
            </Row>
@@ -161,7 +162,7 @@ function Profile(props) {
                 <Paragraph><MaterialCommunityIcons color="#234A85" name="key" size={20}/></Paragraph>
                 </Col>
                 <Col size={75}>
-                <Paragraph>{accountKey}</Paragraph>
+                <Paragraph>{accountId}</Paragraph>
                 
                 </Col>
            </Row>
@@ -199,12 +200,12 @@ const styles=StyleSheet.create({
 })
 
 const mapStateToProps = (state) => ({
-    account:state.userState.account[0],
+    currentUser:state.userState.currentUser[0],
     user:state.userState.user[0]
     
   })
   
-  const mapDispatchToProps=dispatch=>bindActionCreators({fetchCurrentAccount,fetchCurrentUser},dispatch)
+  const mapDispatchToProps=dispatch=>bindActionCreators({fetchCurrentUser},dispatch)
   
   export default connect(mapStateToProps,mapDispatchToProps)(Profile)
 

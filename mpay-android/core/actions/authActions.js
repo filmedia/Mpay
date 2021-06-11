@@ -1,28 +1,40 @@
+import React from 'react'
+import {AsyncStorage} from 'react-native'
+import {LOGIN,LOGOUT} from '../constants'
+import {post} from '../helpers/apiAction'
 
-
-export const register=(data)=>{
+export const register=()=>{
     
         const fetchUrl=`https://e798dae2db7d.ngrok.io/api/${'account'}`;
-       
+       post('account',data)
         
-        return  fetch(fetchUrl,{
-              cors:'no-cors',
-              method:"POST",
-              headers:{
-                "Accept":'application/json',
-                "Content-Type":'application/json'
-              },
-              body:JSON.stringify(data)
-            })
-            .then(response=>response.json())
-           
+       
       
 }
-
+export const auth=()=>{
+        return dispatch=>{
+                dispatch(LOGOUT) 
+                AsyncStorage.getItem('auth',(result)=>{
+                        if(result==='true'){
+                                dispatch(LOGIN)
+                        }else{
+                                dispatch(LOGOUT)    
+                        }
+                })
+        }
+}
 export const login=()=>{
-
+        return dispatch=>{
+                //AsyncStorage.setItem("auth","true").then(()=>{
+                        dispatch(LOGIN)
+                //})
+        }
 }
 
 export const logout=()=>{
-
+        return dispatch=>{
+               // AsyncStorage.setItem("auth","false").then(()=>{
+                        dispatch(LOGOUT)
+                //})
+        }
 }

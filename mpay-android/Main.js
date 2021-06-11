@@ -1,6 +1,5 @@
-import { StatusBar } from 'expo-status-bar';
-import {createStackNavigator} from '@react-navigation/stack'
 import React from 'react';
+import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View,AsyncStorage } from 'react-native';
 import {DefaultTheme,Provider as PaperProvider,Button} from 'react-native-paper'
 import AuthScreen from './components/screens/auth/index'
@@ -9,26 +8,16 @@ import EditStudentProfile  from './components/screens/main/profile/EditProfileSt
 import Profile  from './components/screens/main/profile'
 import EditStaffProfile  from './components/screens/main/profile/EditProfileStaff'
 import DrawerContent from './components/extend-components/DrawerContent'
+import {createStackNavigator} from '@react-navigation/stack'
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import Thunk from 'redux-thunk'
-import {Provider} from 'react-redux'
-import {applyMiddleware,createStore} from 'redux'
+import {connect} from 'react-redux'
+import {applyMiddleware,createStore,bindActionCreators} from 'redux'
+import {auth} from './core/actions/authActions'
 import Reducer from './core/reducers'
 import firebase from './firebase'
-import FlashMessage from "react-native-flash-message";
-import {
-  BallIndicator,
-  BarIndicator,
-  DotIndicator,
-  MaterialIndicator,
-  PacmanIndicator,
-  PulseIndicator,
-  SkypeIndicator,
-  UIActivityIndicator,
-  WaveIndicator,
-} from 'react-native-indicators';
- 
+import CreateUserScreen from './components/screens/create-user/CreateUserScreen'
 
 const theme = {
     ...DefaultTheme,
@@ -54,16 +43,19 @@ const ProfileScreen=()=>{
   )
 }
 
-export default class App extends React.Component{
+class Main extends React.Component{
   constructor(props){
     super(props)
     this.state={
       isRegistered:false,
-      loading:false
+      loading:false,
+      auth:false
     }
   }
 
-  componentWillMount=async()=>{
+
+componentDidMount=()=>{
+     // this.props.auth()
       
     this.setState({loading:true})
     firebase.default.auth().onAuthStateChanged(user=>{
@@ -74,15 +66,19 @@ export default class App extends React.Component{
       }
       this.setState({loading:false})
     })
-   
+
+    AsyncStorage.getItem('auth').then((result)=>{
+       
+        this.setState({auth:JSON.parse(result)})
+    })
   }
 
-  render(){
-    return (
-     <Provider store={store}>
+  
 
-     
-      <PaperProvider theme={theme}>
+  render(){
+   //console.error(this.props.auth);
+    return (
+    
         <NavigationContainer>
 
         <View style={{flex:1,marginTop:30}}>
@@ -90,37 +86,50 @@ export default class App extends React.Component{
        
           <>
           {
-            !this.state.loading
-            ?this.state.isRegistered
-              
+           this.state.isRegistered
+              ?!this.state.auth
               ?<Drawer.Navigator drawerContent={props=><DrawerContent {...props}/>} initialRouteName="Home"  
               
-             >
+              drawerStyle={{
+                backgroundColor: '#234A85',
+                width: 240,
+                
+              }}>
                  
-                <Drawer.Screen name="Home" options={{drawerLabel:'MPAY INUKA'}}  
+              <Drawer.Screen name="Home" options={{drawerLabel:'MPAY INUKA'}}  
                component={()=><Stack.Navigator initialRouteName="Main">
               <Stack.Screen  name="Main"  component={MainScreen} options={{headerShown:true}}/>
               <Stack.Screen  name="EditStaffProfile" component={EditStaffProfile} options={{headerShown:true}}/>
               <Stack.Screen  name="EditStudentProfile"  component={EditStudentProfile}  options={{headerShown:true,title:'Modifier profile'}}
               />
-            </Stack.Navigator>} />
+               </Stack.Navigator>} />
                 <Drawer.Screen name="Profile" component={ProfileScreen}  options={{headerShown:false,title:'Profil'}} />
                 <Drawer.Screen name="Settings" component={()=>null} />
               </Drawer.Navigator>
+
+            :<Stack.Navigator initialRouteName="CreateUser">
+             <Stack.Screen  name="CreateUser"  component={CreateUserScreen}  options={{headerShown:true,title:'Inscription'}}
+            />
+          </Stack.Navigator>
               
               
               :<AuthScreen/>
-            :<BarIndicator size={70} color="#234A85"/>
+             
           }
           </>
-          <FlashMessage position="top" />
         </View>
         </NavigationContainer>
-      </PaperProvider>
-      </Provider>
+   
       );
     }
   }
 
 
+
+  const mapStateToProps = (state) => ({
+    auth:state.authState.auth,
+  })
   
+  const mapDispatchToProps=dispatch=>bindActionCreators({auth},dispatch)
+  
+  export default connect(mapStateToProps,mapDispatchToProps)(Main)

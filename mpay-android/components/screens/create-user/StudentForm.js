@@ -6,23 +6,25 @@ import {styles,themes} from './styles'
 import {post} from '../../../core/helpers/apiAction'
 import ValidationComponent from 'react-native-form-validator';
 import SelectDropdown from 'react-native-select-dropdown'
-
+import firebase from '../../../firebase'
+import { showMessage, hideMessage } from "react-native-flash-message";
 class Form extends ValidationComponent {
 
   constructor(props){
     super(props)
     this.state={
-      studentId:'',
-      firstname:'',
-      lastname:'',
-      sexe:'',
+      studentId:'3030303',
+      firstname:'Mitolanise',
+      lastname:'Anilus',
+      sexe:'M',
       phoneNumber:'',
-      email:'',
+      email:'mitolaniseani@gmail.com',
       address:'',
       level:'',
       vacation:'',
-      option:'',
-      disableButton:true
+      option:'sce info',
+      disableButton:true,
+      loadingButton:false
     }
   }
  
@@ -46,18 +48,42 @@ class Form extends ValidationComponent {
   
   
    onCreateUser=()=>{
+     this.setState({loadingButton:true})
      const {studentId,firstname,lastname,sexe,phoneNumber,email,option,level,vacation}=this.state
-    AsyncStorage.getItem('account').then(value=>{
-      const account=JSON.parse(value)
-      var data={
-        studentId,firstname,lastname,sexe,phoneNumber,email,option,level,vacation,
-        accountId:account.id
-      }
-       post("student",data)
-      .then(response=>{
-        AsyncStorage.setItem("auth","true")
+     var data={
+      studentId,firstname,lastname,sexe,telephone:phoneNumber,email,option,level,vacation
+    }
+     AsyncStorage.getItem('account').then(result=>{
+      const user=JSON.parse(result)
+      post("student",{...data,accountId:user.id})
+      .finally(()=>{
+        this.setState({loadingButton:false})
+       firebase.default.auth().signInAnonymously().then(()=>{
+        showMessage({
+          message: `Felicitation ${firstname}!`,
+          description:"Vous venez de creer un compte MPAY-INUKA",
+          type: "info",
+          backgroundColor: "#234A85"
+        });
+       })
       })
-      .catch(error=>alert(error))
+    })
+    
+    // AsyncStorage.getItem('account').then(value=>{
+    //   const account=JSON.parse(value)
+    //   var data={
+    //     studentId,firstname,lastname,sexe,telephone:phoneNumber,email,option,level,vacation
+    //   }
+      
+
+      
+    // })
+  }
+
+  componentDidMount(){
+    AsyncStorage.getItem("account").then(result=>{
+    const account=JSON.parse(result)
+     this.setState({phoneNumber:account.telephone})
     })
   }
 
@@ -188,7 +214,7 @@ render(){
         }
           data={['Premiere année','Deuxieme année','Troisieme année','Quatrieme année','Licence UQAM','Maîtrise']}
           onSelect={(selectedItem, index) => {
-            console.log(selectedItem, index)
+            this.setState({level:selectedItem})
           }}
        />
  
@@ -205,11 +231,11 @@ render(){
         }
           data={['Matin','Median','Soir']}
           onSelect={(selectedItem, index) => {
-            console.log(selectedItem, index)
+            this.setState({vacation:selectedItem})
           }}
        />
      
-       <Button  onPress={()=>this.onValidate()}
+       <Button loading={this.state.loadingButton} onPress={()=>this.onValidate()}
        style={{backgroundColor:'#234A85',padding:5,borderWidth:2}} labelStyle={{color:'#fff'}}>Terminer</Button>
        </View>
        

@@ -9,6 +9,10 @@ import {
   useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
 import {styles,themes} from './styles'
+import firebase from '../../../firebase'
+
+// const client = require('twilio')('ACa0eea2da413f8800cd68505b78118736',
+// 'd08aac79de9b5b64df43ef616a0407ea');
 
 const styles1 = StyleSheet.create({
   root: {flex: 1, padding: 20,justifyContent:'center'},
@@ -29,6 +33,16 @@ const styles1 = StyleSheet.create({
   },
 });
 
+// const sendSms=()=>{
+//   client.messages.create({
+//     body: 'Hello from Node',
+//     to: '+12345678901',
+//     from: '+16108549561'
+//  }).then(message => console.log(message))
+//    // here you can implement your fallback code
+//    .catch(error => console.log(error))
+// }
+
 const CELL_COUNT = 5;
 
 const VerificationScreen = (props) => {
@@ -41,6 +55,7 @@ const VerificationScreen = (props) => {
   });
 
   React.useLayoutEffect(()=>{
+    
     //alert(value.length)
     value.length==5
     ?setDisableButton(false)
@@ -50,7 +65,7 @@ const VerificationScreen = (props) => {
   return (
     <SafeAreaView style={styles1.root}>
     <Paragraph>Nous vous avons envoyé un code pour vérifier votre numéro de téléphone</Paragraph>
-      <Caption>Envoyé à <Caption style={{fontWeight:'bold'}}>{props.route.params.tel}</Caption></Caption>
+      <Caption>Envoyé à <Caption style={{fontWeight:'bold'}}>{props.route.params.phoneNumber}</Caption></Caption>
       <CodeField
         ref={ref}
         {...props2}

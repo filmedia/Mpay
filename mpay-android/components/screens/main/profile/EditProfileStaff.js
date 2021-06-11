@@ -1,209 +1,222 @@
+
+
 import * as React from 'react';
-import {  View,Text,ImageBackground,StyleSheet,ScrollView,Picker } from 'react-native';
-import { HelperText, TextInput,Button,Checkbox,Title,Caption,TextInputMask,Paragraph,Icon,RadioButton  } from 'react-native-paper';
+import {  View,Text,ImageBackground,StyleSheet,ScrollView,Picker,AsyncStorage } from 'react-native';
+import { HelperText, TextInput,Button,Checkbox,Title,Caption,TextInputMask,Paragraph,Snackbar,Icon,RadioButton,Divider  } from 'react-native-paper';
 import { setEnabled } from 'react-native/Libraries/Performance/Systrace';
 import {styles,themes} from './styles'
-function Form (props) {
- 
-  const [studentId, setStudentId] = React.useState('');
-  const [firstname, setFirstName] = React.useState('');
-  const [lastname, setLastName] = React.useState('');
-  const [sexe, setSexe] = React.useState('');
-  const [telephone, setTelephone] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [postal, setPostal] = React.useState('');
-  const [address, setAddress] = React.useState('');
-  
-  const [type, setType] = React.useState('');
-  const [vacation, setVacation] = React.useState('');
+import {post,update} from '../../../../core/helpers/apiAction'
+import ValidationComponent from 'react-native-form-validator';
+import SelectDropdown from 'react-native-select-dropdown'
+import { connect } from 'react-redux'
+import {bindActionCreators} from 'redux'
+import {fetchStaffData} from '../../../../core/actions/fetchData'
+class Form extends ValidationComponent {
 
-  const [validateFirstName,setValidateFirstName]=React.useState(false)
-  const [validateLastName,setValidateLastName]=React.useState(false)
-  const [validateEmail,setValidateEmail]=React.useState(false)
-  const [validatePostal,setValidatePostal]=React.useState(false)
- 
-  const [validateSexe,setValidateSexe]=React.useState(false)
-//   const [validateStudentId,setValidateStudentId]=React.useState(false)
-  const [validateTelephone,setValidateTelephone]=React.useState(false)
-
-  const [disableButton,setDisableButton]=React.useState(true)
- 
-  const policyText=`J'ai lu et j'accepte les Conditions Générales d'Utilisation et la Politique de Protection des Données Personnelles.`
-  const passwordErrorText=`Seuls les lettres(a-z), chiffres (0-9), tirets(-) ou traits de soulignement (_) sont autorisés,
-  et doit avoir au moin 8 caracteres.`
-  const confirmErrorText="Le mot de passe de confirmation doit être le même."
-
-  const telErrorText="Numéro de téléphone invalide."
-  
-  React.useLayoutEffect(()=>{
-    props.navigation.setOptions({
-       title:'Modifier profil'
-      })
-})
-
-
-  const onValidate=()=>{
-    const regexName = /^(([a-zA-Z]{2,32}))$/;
-    const regexEmail = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    const regexPostal=/^\\d{4}$/
-    const regexId=/^(([0-9]{5,32}))$/;
-    const regexTel = /^(([0-9+ ]{7,16}))$/;
-    
-    !firstname || !regexName.test(firstname)
-    ?setValidateFirstName(true)
-    :setValidateFirstName(false)
-
-    !firstname || !regexName.test(firstname)
-    ?setValidateLastName(true)
-    :setValidateLastName(false)
-
-    !email || !regexEmail.test(email)
-    ?setValidateEmail(true)
-    :setValidateEmail(false)
-
-   
-    if(postal){
-    !regexPostal.test(postal)
-    ?setValidatePostal(true)
-    :setValidatePostal(false)
-    }else{
-        setValidatePostal(false) 
-    }
-     
-   
-    !sexe
-    ?setValidateSexe(true)
-    :setValidateSexe(false)
-
-        if(telephone){
-        !regexTel.test(telephone)
-        ?setValidateTelephone(true)
-        :setValidateTelephone(false)
-        }else{
-            setValidateTelephone(false) 
-        }
-
-  }
- 
-
-
-
- return (<ScrollView>
-    <View style={[styles.mainContainer]}>
-        
+  constructor(props){
+    super(props)
+    const {user}=this.props.route.params
+    this.state={
       
+    
+      firstname:user.firstname,
+      lastname:user.lastname,
+      sexe:user.sexe,
+      phoneNumber:user.telephone,
+      email:user.email,
+      address:user.address,
+      staff_type:user.staff_type,
+      disableButton:true,
+      visibleSnack:false,
+      loadingButton:false
+    }
+  }
 
-     <TextInput label="Prenom*" value={firstname} 
-       style={[styles.inputStyle]}
-       theme={themes.inputTheme}
-       onChangeText={(val)=>setFirstName(val)} 
-       error={validateFirstName}
-       onFocus={()=>setValidateFirstName(false)}
+   onDismissSnackBar = () => this.setState({visibleSnack:false},()=>{
+     this.props.navigation.goBack()
+   });
+ 
+  
+  onValidate=()=>{
+    this.validate({
+      firstname: {minlength:2, required: true},
+      lastname: {minlength:2, required: true},
+      email: {email: true,required:true},
+      phoneNumber: {minlength:7, maxlength:15, required: true,numbers:true,required:true},
+      sexe: {required: true},
+      option: {required: true},
+      level: {required: true},
+      staff_type: {required: true},
+     
+    });
+
+    this.isFormValid()
+    ?this.onUpdateUser()
+    :null
+  }
+  
+  
+  
+
+   onUpdateUser=()=>{
+    this.setState({loadingButton:true})
+     const {firstname,lastname,sexe,telephone,email,staff_type,address}=this.state
+    const id= this.props.route.params.user.id
+     var data={
+      firstname,lastname,sexe,telephone,email,staff_type,address
+    }
+  
+     update(`staff/${id}`,data)
+     .then(()=>{
+    })
+    .finally(()=>{
+      this.setState({loadingButton:false})
+      this.setState({visibleSnack:true})
+    })
+    this.props.fetchStaffData()
+    //this.props.navigation.goBack()
+   
+  }
+
+render(){
+  this.props.navigation.setOptions({
+    title:'Modifier profil'
+   })
+  const {firstname,lastname,sexe,phoneNumber,address,email,staff_type}=this.state
+  return (
+  <View>
+      
+  <ScrollView>
+     <View style={[styles.mainContainer]}>
+    
+      
+ 
+      <TextInput label="Prénom*" value={firstname} 
+        ref="firstname"
+        style={[styles.inputStyle]}
+        theme={themes.inputTheme}
+        onChangeText={(firstname)=>this.setState({firstname})} 
+        error={this.isFieldInError('firstname')}
+       
+      />
+        <HelperText type="error" style={styles.errorText} visible={this.isFieldInError('firstname')}>
+         {'Veuillez fournir votre prenom!'}
+        </HelperText>
+ 
+       <TextInput  label="Nom de famille*" value={lastname} 
+       ref="lastname"
+        style={[styles.inputStyle]}
+        theme={themes.inputTheme}
+        onChangeText={(lastname)=>this.setState({lastname})} 
+        error={this.isFieldInError('lastname')}
+       
+        />
+ 
+       <HelperText type="error" style={styles.errorText} visible={this.isFieldInError('lastname')}>
+         {'Veuillez fournir votre nom de famille!'}
+       </HelperText>
+      
+ 
+ <RadioButton.Group value={sexe} onValueChange={sexe => {this.setState({sexe})}}
+ ref="sexe" 
+   >
+     
+     <View style={{flexDirection:'row',justifyContent:'space-around',alignItems:'center'}}>
+     <Paragraph style={{color:this.isFieldInError('sexe')?'#A6211D':"#234A85"}}>Sexe*</Paragraph>
+       <View style={{flexDirection:'row-reverse',alignItems:'center'}}>
+         <Paragraph style={{color:'#234A85'}}>Masculin</Paragraph>
+         <RadioButton value="M"   theme={themes.rdButtonTheme} />
+       </View>
+       <View style={{flexDirection:'row-reverse',alignItems:'center'}}>
+         <Paragraph style={{color:'#234A85'}}>Feminin</Paragraph>
+         <RadioButton value="F" theme={themes.rdButtonTheme} />
+       </View>
+     </View>
+     </RadioButton.Group>
+ 
+       <HelperText type="error" style={styles.errorText} visible={this.isFieldInError('sexe')}>
+       {'Veuillez selectionner votre sexe!'}
+       </HelperText>
+       <Divider style={{height:1.5}}/>
+       <TextInput label="Telephone*" value={phoneNumber} 
+       ref="phoneNumber"
+        style={[styles.inputStyle]}
+        theme={themes.inputTheme}
+        onChangeText={(phoneNumber)=>this.setState({phoneNumber})} 
+        keyboardType="phone-pad" 
+        error={this.isFieldInError('phoneNumber')}
+        
+        />
+         <HelperText type="error" style={styles.errorText} visible={this.isFieldInError('phoneNumber')}>
+         {'Veuillez fournir un numero de telephone valide!'}
+       </HelperText>
+       
+ 
+       <TextInput label="Email*" value={email} 
+       ref="email"
+        style={[styles.inputStyle]}
+        theme={themes.inputTheme}
+        onChangeText={(email)=>this.setState({email})} 
+        keyboardType="email-address"  
+        error={this.isFieldInError('email')}
+       
+        />
+ 
+     <HelperText type="error" style={styles.errorText} visible={this.isFieldInError('email')}>
+     {'Veuillez fournir un email valide!'}
+       </HelperText>
+ 
+      <TextInput label="Adresse complete" value={address} 
+      ref="address"
+        style={[styles.inputStyle]}
+        theme={themes.inputTheme}
+        onChangeText={(address)=>this.setState({address})} 
+        //keyboardType="phone-pad"  
      />
-       <HelperText type="error" style={styles.errorText} visible={validateFirstName}>
-        {'error prenom'}
+ 
+ <SelectDropdown
+          ref="staff_type"
+        buttonStyle={{width:'100%'}}
+        defaultButtonText={'Type de personnel*'}
+        renderCustomizedButtonChild={
+          (selectedItem)=>(<Paragraph style={{color:'#234A85',fontSize:17}}>{!staff_type ?selectedItem:staff_type}</Paragraph>)
+        }
+          data={['Personnel Administratif','Personnel Academique','Stagiaire','Autre']}
+          onSelect={(selectedItem, index) => {
+            this.setState({staff_type:selectedItem})
+          }}
+       />
+ 
+        <Divider style={{height:1.5}}/>
+        <HelperText type="error" style={styles.errorText} visible={this.isFieldInError('staff_type')}>
+        {"Veuillez selectionner un type de personnel!"}
        </HelperText>
 
-      <TextInput  label="Nom de famille*" value={lastname} 
-       style={[styles.inputStyle]}
-       theme={themes.inputTheme}
-       onChangeText={(val)=>setLastName(val)} 
-       error={validateLastName}
-       onFocus={()=>setValidateLastName(false)}
-       />
-
-      <HelperText type="error" style={styles.errorText} visible={validateLastName}>
-        {'error nom'}
-      </HelperText>
+        
      
-
-<RadioButton.Group value={sexe} onValueChange={newValue => {setSexe(newValue),setValidateSexe(false)}}   >
-    <View style={{flexDirection:'row',justifyContent:'space-around',alignItems:'center'}}>
-    <Paragraph style={{color:validateSexe?'#A6211D':"#234A85"}}>Sexe</Paragraph>
-      <View style={{flexDirection:'row-reverse',alignItems:'center'}}>
-        <Paragraph style={{color:'#234A85'}}>Masculin</Paragraph>
-        <RadioButton value="M"   theme={themes.rdButtonTheme} />
-      </View>
-      <View style={{flexDirection:'row-reverse',alignItems:'center'}}>
-        <Paragraph style={{color:'#234A85'}}>Feminin</Paragraph>
-        <RadioButton value="F" theme={themes.rdButtonTheme} />
-      </View>
-    </View>
-    </RadioButton.Group>
-
-      <HelperText type="error" style={styles.errorText} visible={validateSexe}>
-        {'error sexe'}
-      </HelperText>
-
-      <TextInput label="Telephone" value={telephone} 
-       style={[styles.inputStyle]}
-       theme={themes.inputTheme}
-       onChangeText={(val)=>setTelephone(val)} 
-       keyboardType="phone-pad" 
-       error={validateTelephone}
-        onFocus={()=>setValidateTelephone(false)}
-       />
-        <HelperText type="error" style={styles.errorText} visible={validateTelephone}>
-        {'error telephone'}
-      </HelperText>
-
-      <TextInput label="Email*" value={email} 
-       style={[styles.inputStyle]}
-       theme={themes.inputTheme}
-       onChangeText={(val)=>setEmail(val)} 
-       keyboardType="email-address"  
-       error={validateEmail}
-       onFocus={()=>setValidateEmail(false)}
-       />
-
-    <HelperText type="error" style={styles.errorText} visible={validateEmail}>
-        {'error email'}
-      </HelperText>
-
-     <TextInput label="Code postal" value={postal} 
-       style={[styles.inputStyle]}
-       theme={themes.inputTheme}
-       onChangeText={(val)=>setPostal(val)} 
-       error={validatePostal}
-       onFocus={()=>setValidatePostal(false)}
-       />
-
-    <HelperText type="error" style={styles.errorText} visible={validatePostal}>
-        {'error postal'}
-      </HelperText>
-
-     <TextInput label="Adresse complete" value={address} 
-       style={[styles.inputStyle]}
-       theme={themes.inputTheme}
-       onChangeText={(val)=>setAddress(val)} 
-       //keyboardType="phone-pad"  
-    />
-
-    
-   
-        
-
-      <Picker
-        selectedValue={type}
-        style={{ height: 50, width: 150,color:'#234A85',width:'100%' }}
-        onValueChange={(itemValue, itemIndex) => setType(itemValue)}
-        
-        >
-        
-        <Picker.Item label="Type de personnel*"  />
-        <Picker.Item label="Personnel Administratif" value="P-AD" />
-        <Picker.Item label="Personnel Academique" value="P-AC" />
-        <Picker.Item label="Stagiaire" value="STG" />
-      </Picker>
-
-    
-      <Button  onPress={()=>onValidate()}
-      style={{backgroundColor:'#234A85',padding:5,borderWidth:2}} labelStyle={{color:'#fff'}}>Terminer</Button>
-      </View>
+       <Button loading={this.state.loadingButton}  onPress={()=>this.onValidate()}
+       style={{backgroundColor:'#234A85',padding:5,borderWidth:2}} labelStyle={{color:'#fff'}}>Enregister</Button>
       
-    </ScrollView>
-  );
+       </View>
+       
+     </ScrollView>
+     <Snackbar
+           duration={3000}
+        visible={this.state.visibleSnack}
+        onDismiss={this.onDismissSnackBar}
+        
+        style={{backgroundColor:'#234A85'}}
+        >
+        Le profil a été mis à jour.
+      </Snackbar>
+     </View>
+   );
+}
 };
 
 
-export default Form;
+
+
+const mapDispatchToProps=dispatch=>bindActionCreators({fetchStaffData},dispatch)
+
+export default connect(null,mapDispatchToProps)(Form)

@@ -7,33 +7,44 @@ import {Text,View,TouchableOpacity} from 'react-native'
 import {Paragraph,Caption,Title,Appbar} from 'react-native-paper'
 import { connect } from 'react-redux'
 import {bindActionCreators} from 'redux'
-import {fetchCurrentAccount,fetchCurrentUser} from '../../../core/actions/fetchData'
-import Profile from './profile'
+import {fetchStaffData,fetchStudentData,fetchCurrentUser,clearData} from '../../../core/actions/fetchData'
+import DashboardScreen from './dashboard'
+
 const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
 
 const MORE_ICON = Platform.OS === 'ios' ? 'dots-horizontal' : 'dots-vertical';
 class Main extends Component {
+ 
+  componentDidUpdate(){
+    if(this.props.currentUser!==undefined){
+      this.props.currentUser.user_type=="student"||this.props.currentUser.user_type=="none"
+      ?this.props.fetchStudentData()
+      :this.props.fetchStaffData()
+     }
+  }
   componentDidMount(){
-    this.props.fetchCurrentAccount()
     this.props.fetchCurrentUser()
-    
-    this.props.navigation.setOptions({
-      header:()=>(
-        <View style={{backgroundColor:'#234A85',justifyContent:'center',padding:10}}>
-          <TouchableOpacity onPress={()=>this.props.navigation.openDrawer()}>
-           <MaterialCommunityIcons name="menu" color={"#fff"} size={30} />
-          </TouchableOpacity>
-        </View>
-      ),
-    })
   }
     render() {
-      console.log(this.props.account);
+      this.props.navigation.setOptions({
+        header:()=>(
+          <View style={{backgroundColor:'#234A85',flexDirection:'row',alignItems:'center',justifyContent:'space-between',padding:10}}>
+            <TouchableOpacity onPress={()=>this.props.navigation.openDrawer()}>
+             <MaterialCommunityIcons name="menu" color={"#fff"} size={30} />
+            </TouchableOpacity>
+
+            <TouchableOpacity>
+             <MaterialCommunityIcons name="message-text-outline" color={"#fff"} size={25} />
+            </TouchableOpacity>
+            
+          </View>
+        ),
+      })
         return (
         
             <Tab.Navigator
-              initialRouteName="Profile"
+              initialRouteName="Dashboard"
              
               tabBarOptions={{
                 activeTintColor: '#234A85',
@@ -42,7 +53,7 @@ class Main extends Component {
             >
               <Tab.Screen
                 name="Dashboard"
-                component={()=>null}
+                component={DashboardScreen}
                
                 options={{
                   tabBarLabel: 'Dashboard',
@@ -83,10 +94,10 @@ class Main extends Component {
 
 
 const mapStateToProps = (state) => ({
-  account:state.userState.account[0],
+  currentUser:state.userState.currentUser[0],
   
 })
 
-const mapDispatchToProps=dispatch=>bindActionCreators({fetchCurrentAccount,fetchCurrentUser},dispatch)
+const mapDispatchToProps=dispatch=>bindActionCreators({fetchStaffData,fetchStudentData,fetchCurrentUser,clearData},dispatch)
 
 export default connect(mapStateToProps,mapDispatchToProps)(Main)

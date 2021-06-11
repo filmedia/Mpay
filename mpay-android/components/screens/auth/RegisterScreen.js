@@ -8,6 +8,18 @@ import ValidationComponent from 'react-native-form-validator';
 import { render } from 'react-dom';
 import firebase from '../../../firebase'
 import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
+import {
+  BallIndicator,
+  BarIndicator,
+  DotIndicator,
+  MaterialIndicator,
+  PacmanIndicator,
+  PulseIndicator,
+  SkypeIndicator,
+  UIActivityIndicator,
+  WaveIndicator,
+} from 'react-native-indicators';
+import { showMessage, hideMessage } from "react-native-flash-message";
 
 const policyText=`J'ai lu et j'accepte les Conditions Générales d'Utilisation et la Politique de Protection des Données Personnelles.`
 const passwordErrorText=`Seuls les lettres(a-z), chiffres (0-9), tirets(-) ou traits de soulignement (_) sont autorisés,
@@ -27,14 +39,19 @@ class RegisterScreen extends ValidationComponent{
       checkPolicy:'unchecked',
       visiblePassword2:false,
       visiblePassword1:false,
-      disableButton:false
+      disableButton:false,
+      loadingButton:false
 
     }
   }
-
+ 
+  // componentDidMount(){
+  //   this.props.navigation.navigate('CreateUser')
+  // }
  
  
   onValidatePhoneNumber=(phoneNumber)=>{
+    
     this.setState({phoneNumber},()=>{
       this.validate({phoneNumber: {minlength:7, maxlength:15, required: true,numbers:true}})
     })
@@ -73,26 +90,11 @@ class RegisterScreen extends ValidationComponent{
   
   
 
-// const validatePassword=()=>{
-   
-//     if(password===''){
-      
-//         return true
-//     }
-    
-//     const regex = /^(([a-zA-Z0-9]{8,32}))$/;
-//     return regex.test(password)  
-//   }
-
  
 
  
   onRegister=()=>{
-    var data={
-      telephone:this.state.phoneNumber,
-      password:this.state.password
-    }
-   
+    
     
     this.validate({
       phoneNumber: {minlength:7, maxlength:15, required: true,numbers:true},
@@ -100,15 +102,30 @@ class RegisterScreen extends ValidationComponent{
       confirmPassword: {equalPassword:this.state.password}
 
     });
+
+    var data={
+      telephone:this.state.phoneNumber,
+      password:this.state.password
+    }
+  
+
+    this.setState({loadingButton:true})
     this.isFormValid()
-    ?''//firebase.default.auth().signInWithPhoneNumber("+50937620346",firebase.default.)
-    // ?post("account",data)
-    // .then(response=>{
-    //   AsyncStorage.setItem('account',JSON.stringify(response)).then(()=>{
-    //     this.props.navigation.navigate('Verification',{phoneNumber})
-    //   })
-    // })
-    // .catch(error=>alert(error))
+    ?post('account',data).then(response=>{
+      AsyncStorage.setItem('account',JSON.stringify(response))
+      this.setState({phoneNumber:'',password:'',confirmPassword:'',loadingButton:false})
+      //console.log(response)
+      this.props.navigation.navigate('CreateUser')
+    })
+    .catch((e)=>{
+     
+      this.setState({loadingButton:false})
+      showMessage({
+        message: "Desolé! Ce numero est déjà utilisé.",
+        description: "Veuillez utiliser un autre numero.",
+        type: "danger",
+      });
+    })
     :null
 
   }
@@ -129,7 +146,8 @@ class RegisterScreen extends ValidationComponent{
           style={[styles.inputStyle]}
           theme={themes.inputTheme}
           onChangeText={(tel)=>this.onValidatePhoneNumber(tel)} keyboardType="phone-pad"
-          right={<TextInput.Icon color={'#E1CB06'}  name="phone" 
+          
+          left={<TextInput.Icon color={'#E1CB06'}  name="phone" 
          
           render={props =>{
             return <TextInputMask
@@ -150,14 +168,20 @@ class RegisterScreen extends ValidationComponent{
            ref="password"
           autoCapitalize={'none'}
            label="Password"
+           value={this.state.password}
            style={[styles.inputStyle]}
            onChangeText={(password)=>this.onValidatePassword(password)}
            theme={themes.inputTheme}
            secureTextEntry={!this.state.visiblePassword1}
+           left={<TextInput.Icon color={'#E1CB06'}name={"key-variant"} />}
+           
+           
            right={<TextInput.Icon color={'#E1CB06'} onPress={()=>{this.onVisiblePassword1()
          
            }} name={this.state.visiblePassword1 ?"eye" :'eye-off'} />}
            error={this.isFieldInError('password')}
+
+          
            />
    
    
@@ -168,11 +192,12 @@ class RegisterScreen extends ValidationComponent{
          <TextInput label="Confirmer le mot de passe" 
          ref="confirmPassword"
           autoCapitalize={'none'}
-         //value={this.state.confirmPassword} 
+         value={this.state.confirmPassword} 
          onChangeText={(password)=>this.onValidateConfirmPassword(password)}
          style={[styles.inputStyle]}
           theme={themes.inputTheme}
           secureTextEntry={!this.state.visiblePassword2}
+          left={<TextInput.Icon color={'#E1CB06'} name={"key-variant"} />}
           right={<TextInput.Icon color={'#E1CB06'} onPress={()=>{this.onVisiblePassword2()}} 
           name={this.state.visiblePassword2 ?"eye" :'eye-off'} />}
           error={this.isFieldInError('confirmPassword')}
@@ -191,8 +216,10 @@ class RegisterScreen extends ValidationComponent{
            onPress={()=>this.onCheckPolicy()}
            />
            
-         <Button disabled={!this.state.disableButton}  onPress={()=>this.onRegister()}
-         style={{backgroundColor:this.state.disableButton ?'#234A85':'transparent',padding:5,borderWidth:2,borderColor:'#234A85'}} labelStyle={{color:'#fff'}}>S'inscrire</Button>
+         <Button loading={this.state.loadingButton} disabled={!this.state.disableButton}  onPress={()=>this.onRegister()}
+         style={{backgroundColor:this.state.disableButton ?'#234A85':'transparent',padding:5,borderWidth:2,borderColor:'#234A85'}} labelStyle={{color:'#fff'}}>
+           S'inscrire
+           </Button>
          
          </View>
          <View style={styles.bottomStyle}>
